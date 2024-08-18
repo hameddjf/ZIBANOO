@@ -27,6 +27,3 @@ class Base(models.Model):
 
     def get_absolute_url(self):
         return reverse("_detail", kwargs={"pk": self.pk})
-
-
-)
