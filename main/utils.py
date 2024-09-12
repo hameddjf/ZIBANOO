@@ -1,5 +1,15 @@
 import re
+
 from django.utils.text import slugify as django_slugify
+
+from urllib.parse import quote
+
+
+def custom_slugify(value):
+    """Create a custom slug from the given value, preserving Persian characters"""
+    value = re.sub(r'[^\w\s\-ء-ی]', '', value).strip().lower()
+    value = re.sub(r'[\s\-]+', '-', value)
+    return quote(value)
 
 
 def get_client_ip(request):

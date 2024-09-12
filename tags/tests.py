@@ -46,16 +46,16 @@ class CategoryViewsTest(TestCase):
 
     def test_category_list_view(self):
         """Test category list view"""
-        response = self.client.get(reverse('category_list'))
+        response = self.client.get(reverse('tags:category_list'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Test Category")
 
     def test_category_detail_view(self):
         """Test category detail view"""
         response = self.client.get(
-            reverse('category_detail', kwargs={'slug': 'test-category'}))
+            reverse('tags:category_detail', kwargs={'slug': 'test-category'}))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Test Category")
+        self.assertContains(response, "Category: Test Category")
 
 
 class TagViewsTest(TestCase):
@@ -66,13 +66,13 @@ class TagViewsTest(TestCase):
 
     def test_tag_list_view(self):
         """Test tag list view"""
-        response = self.client.get(reverse('tag_list'))
+        response = self.client.get(reverse('tags:tag_list'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Test Tag")
 
     def test_tag_detail_view(self):
         """Test tag detail view"""
         response = self.client.get(
-            reverse('tag_detail', kwargs={'slug': 'test-tag'}))
+            reverse('tags:tag_detail', kwargs={'slug': 'test-tag'}))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Test Tag")
+        self.assertContains(response, "Tag: Test Tag")

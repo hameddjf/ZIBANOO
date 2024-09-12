@@ -5,6 +5,16 @@ from django.utils.translation import activate
 class LanguageMiddleware(MiddlewareMixin):
     """Set default language in session if not set"""
 
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if 'lang' in request.GET:
+            language = request.GET['lang']
+            request.session['django_language'] = language
+        response = self.get_response(request)
+        return response
+
     def process_request(self, request):
         language = request.session.get('django_language', 'fa')
         activate(language)

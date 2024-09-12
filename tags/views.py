@@ -1,30 +1,34 @@
-from django.views.generic import ListView, DetailView
+from django.views.generic import View
+from django.http import HttpResponse
+
 from .models import Category, Tag
 
 
-class CategoryListView(ListView):
-    """List view for categories"""
-    model = Category
-    context_object_name = 'categories'
-    # template_name = 'categories/category_list.html'
+class CategoryListView(View):
+    def get(self, request):
+        categories = Category.objects.all()
+        return HttpResponse(', '.join([category.name for category in categories]))
 
 
-class CategoryDetailView(DetailView):
-    """Detail view for a category"""
-    model = Category
-    context_object_name = 'category'
-    # template_name = 'categories/category_detail.html'
+class CategoryDetailView(View):
+    def get(self, request, slug):
+        try:
+            category = Category.objects.get(slug=slug)
+            return HttpResponse(f"Category: {category.name}")
+        except Category.DoesNotExist:
+            return HttpResponse("Category not found", status=404)
 
 
-class TagListView(ListView):
-    """List view for tags"""
-    model = Tag
-    context_object_name = 'tags'
-    # template_name = 'categories/tag_list.html'
+class TagListView(View):
+    def get(self, request):
+        tags = Tag.objects.all()
+        return HttpResponse(', '.join([tag.name for tag in tags]))
 
 
-class TagDetailView(DetailView):
-    """Detail view for a tag"""
-    model = Tag
-    context_object_name = 'tag'
-    # template_name = 'categories/tag_detail.html'
+class TagDetailView(View):
+    def get(self, request, slug):
+        try:
+            tag = Tag.objects.get(slug=slug)
+            return HttpResponse(f"Tag: {tag.name}")
+        except Tag.DoesNotExist:
+            return HttpResponse("Tag not found", status=404)

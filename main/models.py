@@ -13,8 +13,8 @@ class Base(models.Model):
     slug = models.SlugField(_("اسلاگ"), unique=True, allow_unicode=True)
 
     category = models.ManyToManyField(
-        "Category", verbose_name=_("دسته‌بندی"), related_name="base_items")
-    tags = models.ManyToManyField("Tag", verbose_name=_(
+        "tags.Category", verbose_name=_("دسته‌بندی"), related_name="base_items")
+    tags = models.ManyToManyField("tags.Tag", verbose_name=_(
         "برچسب‌ها"), related_name="base_items")
     user = models.ForeignKey(User, verbose_name=_(
         "کاربر"), on_delete=models.CASCADE, related_name="base_items")
