@@ -25,9 +25,6 @@ SECRET_KEY = 'django-insecure-1j7*c*27gn+t$tpohmvdlpje&lgo=^v1&j#b8wd+4t6#)0#9f5
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -38,7 +35,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'mptt',
+
     'main',
+    'tags',
 ]
 
 MIDDLEWARE = [
@@ -105,11 +105,11 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'yourdomain.com']
+USE_I18N = True
+LANGUAGE_CODE = 'fa-ir'
 
 TIME_ZONE = 'UTC'
-
-USE_I18N = True
 
 USE_TZ = True
 
