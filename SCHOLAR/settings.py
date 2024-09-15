@@ -106,7 +106,7 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'yourdomain.com']
 USE_I18N = True
 LANGUAGE_CODE = 'fa-ir'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Tehran'
 
 USE_TZ = True
 
