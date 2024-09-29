@@ -1,57 +1,67 @@
-from django.contrib.auth import get_user_model
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import CreateView
-from .forms import CustomUserCreationForm, CustomUserChangeForm
-from django.contrib.sites.shortcuts import get_current_site
-from django.core.mail import send_mail
+from django.core.serializers import serialize
+from rest_framework import generics, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from django.contrib.auth import login, logout
+from .serializers import CustomUserSerializer, LoginSerializer, CustomUserChangeSerializer
+from .tokens import account_activation_token
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
-from django.views import View
-from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView
-from .forms import CustomLoginForm, CustomPasswordChangeForm
-from django.views.generic import UpdateView, TemplateView
-from .models import CustomUser
-from .tokens import account_activation_token
+from django.core.mail import send_mail
+from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse_lazy
-from django.shortcuts import render, redirect
-from django.utils import timezone
 from django.conf import settings
-from django.contrib.auth import logout
+from rest_framework_simplejwt.tokens import RefreshToken
+from .models import CustomUser
 
 
-class EmailConfirmationView(LoginRequiredMixin,TemplateView):
-    login_url = 'signup'
-    template_name = 'registration/email_confirmation.html'
-
-class HomeView(LoginRequiredMixin,TemplateView):
-    template_name = 'home.html'
+# from ratelimit.decorators import ratelimit
 
 
-class SignUpView(CreateView):
-    model = get_user_model()
-    form_class = CustomUserCreationForm
-    template_name = 'registration/signup.html'
-    success_url = reverse_lazy('email_confirmation')
+class SignUpView(generics.CreateAPIView):
+    serializer_class = CustomUserSerializer
 
-    def form_valid(self, form):
-        user = form.save(commit=False)
-        user.is_active = False
-        user.save()
+    def post(self, request, *args, **kwargs):
+        # ابتدا داده‌های ورودی کاربر را به serializer داده و اعتبارسنجی کنید
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        # ارسال ایمیل فعال‌سازی
+        # بررسی وجود کاربری با ایمیل یا شماره تلفن
+        email = serializer.validated_data.get('email')
+        phone_number = serializer.validated_data.get('phone_number')  # Assuming phone_number field exists
+        username = serializer.validated_data.get('username')
+
+        if CustomUser.objects.filter(email=email).exists():
+            return Response({'message': 'User with this email already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if CustomUser.objects.filter(phone_number=phone_number).exists():
+            return Response({'message': 'User with this phone number already exists.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        if CustomUser.objects.filter(username=username).exists():
+            return Response({'message': 'User with this username already exists.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        # اگر کاربری با این ایمیل یا شماره تلفن وجود نداشت، ادامه دهید و کاربر را ثبت کنید
+        user = serializer.save(is_active=False)  # Initially, user is inactive
         token = account_activation_token.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
-        domain = get_current_site(self.request).domain
-        link = reverse_lazy('activate', kwargs={'uidb64': uid, 'token': token})
-        activate_url = f"http://{domain}{link}"
+        domain = get_current_site(request).domain
+        activate_url = f"http://{domain}{reverse_lazy('activate', kwargs={'uidb64': uid, 'token': token})}"
         email_subject = 'Activate your account'
         email_body = f'Please click the link to activate your account: {activate_url}'
-        send_mail(email_subject, email_body, settings.DEFAULT_FROM_EMAIL, [user.email])
 
-        return redirect('email_confirmation')
+        try:
+            send_mail(email_subject, email_body, settings.DEFAULT_FROM_EMAIL, [user.email])
+        except Exception as e:
+            user.delete()  # Optionally delete user if email fails
+            return Response({'message': 'Error sending email.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response({'message': 'User registered successfully. Please check your email to activate your account.'},
+                        status=status.HTTP_201_CREATED)
 
 
-class ActivateAccountView(View):
+class ActivateAccountView(generics.GenericAPIView):
     def get(self, request, uidb64, token):
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
@@ -60,48 +70,89 @@ class ActivateAccountView(View):
             user = None
 
         if user is not None and account_activation_token.check_token(user, token):
-            # چک کردن اینکه آیا توکن منقضی شده یا نه
-            token_created_at = user.date_joined.timestamp()
-            if account_activation_token.is_token_expired(user, token_created_at):
-                return render(request, 'activation_invalid.html', {'message': 'لینک فعال‌سازی منقضی شده است'})
-
-            # اگر توکن معتبر باشد و منقضی نشده باشد
             user.is_active = True
             user.save()
-            return redirect('login')
-        else:
-            return render(request, 'activation_invalid.html', {'message': 'لینک فعال‌سازی منقضی شده است'})
+            login(request, user)  # Auto-login after activation
+            refresh = RefreshToken.for_user(user)  # Generate JWT upon activation
+            return Response({
+                'message': 'Account activated and logged in successfully!',
+                'refresh': str(refresh),
+                'access': str(refresh.access_token)
+            }, status=status.HTTP_200_OK)
+        return Response({'message': 'Activation link is invalid or expired.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CustomLoginView(LoginView):
-    form_class = CustomLoginForm
-    template_name = 'registration/login.html'
-    success_url = reverse_lazy('home')
+class CustomLoginView(generics.GenericAPIView):
+    serializer_class = LoginSerializer
 
-
-class CustomLogoutView(LoginRequiredMixin, View):
-    def get(self, request, *args, **kwargs):
-        logout(request)
-        print("outed login1")
-        return redirect('login')
-
+    # @ratelimit(key='ip', rate='5/m', block=True)  # Limit to 5 requests per minute
     def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        password = serializer.validated_data['password']
+
+        try:
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            return Response({'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if not user.is_active:
+            return Response({'message': 'Account is not activated.'}, status=status.HTTP_403_FORBIDDEN)
+
+        if user.check_password(password):
+            login(request, user)
+            refresh = RefreshToken.for_user(user)  # JWT token generation
+            return Response({
+                'message': 'Login successful!',
+                'refresh': str(refresh),
+                'access': str(refresh.access_token)
+            }, status=status.HTTP_200_OK)
+        return Response({'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class CustomLogoutView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
         logout(request)
-        print("outed login2")
-        return redirect('login')
+        return Response({'message': 'Logout successful!'}, status=status.HTTP_200_OK)
 
 
-class CustomPasswordChangeView(LoginRequiredMixin, PasswordChangeView):
-    form_class = CustomPasswordChangeForm
-    template_name = 'registration/change_password.html'
-    success_url = reverse_lazy('home')
-
-
-class ProfileUpdateView(LoginRequiredMixin, UpdateView):
-    model = CustomUser
-    form_class = CustomUserChangeForm
-    template_name = 'registration/profile_update.html'
-    success_url = reverse_lazy('home')
+class CustomPasswordChangeView(generics.UpdateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CustomUserChangeSerializer
 
     def get_object(self):
         return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+
+        serializer.is_valid(raise_exception=True)
+
+        if not user.check_password(serializer.validated_data['old_password']):
+            return Response({'message': 'Old password is incorrect'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if serializer.validated_data['new_password'] != serializer.validated_data['confirm_password']:
+            return Response({'message': 'New passwords do not match'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(serializer.validated_data['new_password'])
+        user.save()
+        return Response({'message': 'Password changed successfully'}, status=status.HTTP_200_OK)
+
+
+class ProfileUpdateView(generics.UpdateAPIView):
+    serializer_class = CustomUserChangeSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        serializer = self.get_serializer(data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({'message': 'Profile updated successfully'}, status=status.HTTP_200_OK)

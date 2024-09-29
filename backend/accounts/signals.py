@@ -12,7 +12,7 @@ User = get_user_model()
 def delete_unverified_user(sender, instance, created, **kwargs):
     if created and not instance.is_active:
         def check_user():
-            time.sleep(60)
+            time.sleep(120)
             user = User.objects.filter(id=instance.id).first()
             if user and not user.is_active:
                 user.delete()

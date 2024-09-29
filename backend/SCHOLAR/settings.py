@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,6 +40,8 @@ INSTALLED_APPS = [
     'main',
     'tags',
     'accounts',
+    'rest_framework',
+    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
@@ -122,12 +125,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # تنظیمات ایمیل (برای ارسال لینک فعال‌سازی)
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = '***@gmail.com'
+DEFAULT_FROM_EMAIL = '****@gmail.com'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = '****@gmail.com'
+EMAIL_HOST_USER = '*****@gmail.com'
 EMAIL_HOST_PASSWORD = '****'
 EMAIL_TIMEOUT = 30
 
@@ -136,4 +139,22 @@ AUTH_USER_MODEL = 'accounts.CustomUser'
 
 # تنظیمات سایت
 SITE_ID = 1
-LOGIN_REDIRECT_URL = 'home'
+
+
+# تنظیمات JWT
+
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=10),  # مدت اعتبار access token
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=10),  # مدت اعتبار refresh token
+    'ROTATE_REFRESH_TOKENS': True,  # ایجاد refresh token جدید بعد از هر درخواست
+    'BLACKLIST_AFTER_ROTATION': True,
+    'AUTH_HEADER_TYPES': ('Bearer',),  # نوع header احراز هویت در API
+}
+
+# تنظیمات REST Framework برای استفاده از JWT به عنوان روش احراز هویت
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # JWT احراز هویت
+    ),
+}

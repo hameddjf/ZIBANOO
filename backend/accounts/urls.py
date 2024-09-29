@@ -1,14 +1,19 @@
 from django.urls import path
-from .views import SignUpView, ActivateAccountView, CustomLoginView, CustomLogoutView, CustomPasswordChangeView, \
-    ProfileUpdateView, EmailConfirmationView, HomeView
+
+from .views import SignUpView, ActivateAccountView, CustomLoginView, CustomLogoutView, ProfileUpdateView
+
+from django.urls import path
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
 urlpatterns = [
-    path('signup/', SignUpView.as_view(), name='signup'),
-    path('activate/<uidb64>/<token>/', ActivateAccountView.as_view(), name='activate'),
-    path('login/', CustomLoginView.as_view(), name='login'),
-    path('logout/', CustomLogoutView.as_view(), name='logout'),
-    path('password/', CustomPasswordChangeView.as_view(), name='password_change'),
-    path('profile/', ProfileUpdateView.as_view(), name='profile_update'),
-    path('email_confirmation/', EmailConfirmationView.as_view(), name='email_confirmation'),
-    path('home/', HomeView.as_view(), name='home'),
+    path('api/signup/', SignUpView.as_view(), name='signup_api'),
+    path('api/activate/<uidb64>/<token>/', ActivateAccountView.as_view(), name='activate'),
+    path('api/login/', CustomLoginView.as_view(), name='login_api'),
+    path('api/logout/', CustomLogoutView.as_view(), name='logout_api'),
+    path('api/profile/', ProfileUpdateView.as_view(), name='profile_api'),
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # دریافت توکن JWT
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # رفرش توکن JWT
 ]
