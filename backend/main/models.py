@@ -1,10 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
-from django.contrib.auth import get_user_model
 from django.utils.text import slugify
-
-User = get_user_model()
 
 
 class Base(models.Model):
@@ -16,8 +13,6 @@ class Base(models.Model):
         "tags.Category", verbose_name=_("دسته‌بندی"), related_name="base_items")
     tags = models.ManyToManyField("tags.Tag", verbose_name=_(
         "برچسب‌ها"), related_name="base_items")
-    user = models.ForeignKey(User, verbose_name=_(
-        "کاربر"), on_delete=models.CASCADE, related_name="base_items")
 
     is_published = models.BooleanField(_("منتشر شده"), default=False)
     created_at = models.DateTimeField(_("تاریخ ایجاد"), auto_now_add=True)
@@ -27,12 +22,12 @@ class Base(models.Model):
     like_count = models.PositiveIntegerField(_("تعداد لایک"), default=0)
 
     thumbnail = models.ImageField(
-        _("تصویر شاخص"), upload_to="base_thumbnails/", blank=True, null=True)
+        _("تصویر"), upload_to="base_thumbnails/", blank=True, null=True)
 
     class Meta:
         abstract = True
-        verbose_name = _("آیتم پایه")
-        verbose_name_plural = _("آیتم‌های پایه")
+        verbose_name = _("آیتم")
+        verbose_name_plural = _("آیتم‌های")
         ordering = ['-created_at']
 
     def __str__(self):

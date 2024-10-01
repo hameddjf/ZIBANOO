@@ -9,6 +9,8 @@ class Base(models.Model):
     """Base model for common fields"""
     name = models.CharField(_("Name"), max_length=50)
     slug = models.SlugField(_("Slug"), unique=True)
+    poster = models.ImageField(
+        _("poster"), upload_to='poster/', null=True, blank=True)
     created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Updated at"), auto_now=True)
 
@@ -30,6 +32,20 @@ class Category(MPTTModel, Base):
 
     def get_absolute_url(self):
         return reverse("category_detail", kwargs={"slug": self.slug})
+
+
+class Brand(Base):
+    """Brand model"""
+
+    class Meta:
+        verbose_name = _("Brand")
+        verbose_name_plural = _("Brands")
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse("Brand_detail", kwargs={"slug": self.slug})
 
 
 class Tag(Base):
