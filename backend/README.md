@@ -14,7 +14,7 @@ This is an example Django project that demonstrates the basic features and funct
 ## Installation
 
 1. Clone the repository:
-git clone https://github.com/your-username/django-project-example.git
+git clone https://github.com/hameddjf/ZIBANOO.git
 
 
 Copy
