@@ -21,16 +21,15 @@ class ProductVariantAdmin(admin.ModelAdmin):
         (None, {
             'fields': ('product', 'price', 'discount_price', 'stock', 'sold')
         }),
-        # فیلد تصویر به اینجا نیازی نیست
     )
 
     @admin.display(description=_('Product Name'))
     def get_product_name(self, obj):
-        return obj.product.name  # نام محصول را برمی‌گرداند
+        return obj.product.name 
 
     @admin.display(description=_('Product Image'))
     def get_product_image(self, obj):
-        if obj.product.poster:  # بررسی می‌کند که آیا obj.product.poster موجود است یا خالی نیست
+        if obj.product.poster:
             return format_html(
                 '<img src="{}" style="width:55px;height:55px;"/>', obj.product.poster.url
             )
@@ -87,7 +86,7 @@ class ProductAdmin(admin.ModelAdmin):
         }),
         ('Media', {
             'classes': ('collapse',),
-            'fields': ('poster',),  # فیلد تصویری اصلی
+            'fields': ('poster',),
         }),
         ('Statistics', {
             'fields': ('view_count', 'like_count', 'created_at'),
