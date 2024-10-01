@@ -62,19 +62,9 @@ You can explore the various features of the application by navigating through th
 
 - **User Authentication**: Users can register, log in, and log out of the application.
 - **Product Management**: Users can create, view, update, and delete products.
-- **Commenting and Rating**: Users can leave comments and rate products.
-- **Search and Filtering**: Users can search for products and filter them based on various criteria.
 
 ## Screenshots
 
-![Login Page](screenshots/login.png)
-*Login Page*
-
-![Product List](screenshots/product-list.png)
-*Product List Page*
-
-![Product Detail](screenshots/product-detail.png)
-*Product Detail Page*
 
 ## Technologies Used
 
@@ -83,9 +73,6 @@ You can explore the various features of the application by navigating through th
 - Django Rest Framework
 - SQLite (for development)
 - PostgreSQL (for production)
-- HTML/CSS
-- JavaScript
-- Bootstrap
 
 ## Contributing
 
