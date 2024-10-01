@@ -14,32 +14,32 @@ This is an example Django project that demonstrates the basic features and funct
 ## Installation
 
 1. Clone the repository:
-git clone https://github.com/hameddjf/ZIBANOO.git
+`git clone https://github.com/hameddjf/ZIBANOO.git`
 
 
 Copy
 
 2. Create a virtual environment and activate it:
-python -m venv venv
-source venv/bin/activate
+`python -m venv venv`
+`source venv/bin/activate`
 
 
 Copy
 
 3. Install the required packages:
-pip install -r requirements.txt
+`pip install -r requirements.txt`
 
 
 Copy
 
 4. Apply the database migrations:
-python manage.py migrate
+`python manage.py migrate`
 
 
 Copy
 
 5. Run the development server:
-python manage.py runserver
+`python manage.py runserver`
 
 sql_more
 
