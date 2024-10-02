@@ -89,11 +89,11 @@ class CustomLoginView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data['email']
+        username = serializer.validated_data['username']
         password = serializer.validated_data['password']
 
         try:
-            user = CustomUser.objects.get(email=email)
+            user = CustomUser.objects.get(username=username)
         except CustomUser.DoesNotExist:
             return Response({'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
