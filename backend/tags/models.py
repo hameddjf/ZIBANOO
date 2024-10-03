@@ -1,3 +1,5 @@
+import os
+
 from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -16,6 +18,13 @@ class Base(models.Model):
 
     class Meta:
         abstract = True
+
+    def delete(self, *args, **kwargs):
+        # Delete poster file from storage
+        if self.poster and os.path.isfile(self.poster.path):
+            os.remove(self.poster.path)
+        # Call the superclass delete method to delete the model instance
+        super().delete(*args, **kwargs)
 
 
 class Category(MPTTModel, Base):
