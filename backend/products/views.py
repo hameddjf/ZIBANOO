@@ -1,4 +1,4 @@
-# views.py
+
 from rest_framework import viewsets
 from .models import Product, ProductImages, ProductVariant, Future
 from .serializers import ProductSerializer, ProductImagesSerializer, ProductVariantSerializer, FutureSerializer
