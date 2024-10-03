@@ -1,5 +1,9 @@
 from django.db import models
+from django.db.models import F
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from django.utils.text import slugify
+
 
 from tags.models import Base
 # Create your models here.
@@ -44,11 +48,11 @@ class Product(Base):
         return reverse("product_detail", kwargs={"slug": self.slug})
 
     def increment_view_count(self):
-        self.view_count += 1
+        self.view_count = F('view_count') + 1
         self.save()
 
     def like(self):
-        self.like_count += 1
+        self.like_count = F('like_count') + 1
         self.save()
 
 
@@ -80,4 +84,5 @@ class ProductVariant(models.Model):
         verbose_name_plural = _("ویژگی‌های محصولات")
 
     def __str__(self):
-        return f"{self.product.name} - {self.future}"
+        futures = ', '.join([f.key for f in self.future.all()])
+        return f"{self.product.name} - {futures}"

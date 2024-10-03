@@ -18,7 +18,7 @@ class ProductVariantAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('product', 'price', 'discount_price', 'stock', 'sold')
+            'fields': ('product', 'price', 'discount_price', 'stock', 'sold','future')
         }),
     )
 
@@ -37,6 +37,7 @@ class ProductVariantAdmin(admin.ModelAdmin):
 
 @admin.register(Future)
 class FutureAdmin(admin.ModelAdmin):
+
     """Admin panel for managing Future (features)"""
     list_display = ('key', 'value')
     search_fields = ('key', 'value')
