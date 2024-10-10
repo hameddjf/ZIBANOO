@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer base{
+    .maxWidth{
+        @apply max-w-[1280px] m-auto;
+    }
+}
