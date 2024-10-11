@@ -1,77 +1,75 @@
-from rest_framework import viewsets, status
+from django.db.models import Count, Subquery, OuterRef, OuterRef, Subquery
+from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Product, ProductImages, ProductVariant, Future
-from .serializers import ProductSerializer, ProductImagesSerializer, ProductVariantSerializer, FutureSerializer
-from .permissions import IsAdminOrReadOnly
+
+from .models import Category, Product, MostViewed
+from .serializers import (
+    CategorySerializer,
+    ProductSerializer,
+    ProductDetailSerializer
+)
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    lookup_field = 'slug'
 
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
-    serializer_class = ProductSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    lookup_field = 'slug'
 
-    def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        return Response({'message': 'Product created successfully!', 'data': response.data}, status=status.HTTP_201_CREATED)
+    def get_queryset(self):
+        queryset = super().get_queryset()
 
-    def update(self, request, *args, **kwargs):
-        response = super().update(request, *args, **kwargs)
-        return Response({'message': 'Product updated successfully!', 'data': response.data}, status=status.HTTP_200_OK)
+        # view count product
+        view_count_subquery = MostViewed.objects.filter(product=OuterRef('pk')) \
+            .values('product') \
+            .annotate(count=Count('id')) \
+            .values('count')
 
-    def destroy(self, request, *args, **kwargs):
-        super().destroy(request, *args, **kwargs)
-        return Response({'message': 'Product deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
+        queryset = queryset.annotate(view_count=Subquery(view_count_subquery))
 
+        if self.action in ['list', 'home', 'shop']:
+            queryset = queryset.only(
+                'id', 'title', 'slug', 'price', 'poster', 'view_count')
+        elif self.action in ['retrieve', 'single']:
+            queryset = queryset.prefetch_related(
+                Prefetch('images', queryset=ProductGallery.objects.only(
+                    'resizes_images'))
+            ).select_related('category')
 
-class ProductImagesViewSet(viewsets.ModelViewSet):
-    queryset = ProductImages.objects.all()
-    serializer_class = ProductImagesSerializer
-    permission_classes = [IsAdminOrReadOnly]
+        return queryset
 
-    def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        return Response({'message': 'Product image uploaded successfully!', 'data': response.data}, status=status.HTTP_201_CREATED)
+    def get_serializer_class(self):
+        if self.action in ['retrieve', 'single']:
+            return ProductDetailSerializer
+        return ProductSerializer
 
-    def update(self, request, *args, **kwargs):
-        response = super().update(request, *args, **kwargs)
-        return Response({'message': 'Product image updated successfully!', 'data': response.data}, status=status.HTTP_200_OK)
+    @action(detail=False)
+    def home(self, request):
+        """home page for product"""
+        featured_products = self.get_queryset().filter(
+            active=True).order_by('-view_count')[:5]
+        serializer = self.get_serializer(featured_products, many=True)
+        return Response(serializer.data)
 
-    def destroy(self, request, *args, **kwargs):
-        super().destroy(request, *args, **kwargs)
-        return Response({'message': 'Product image deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
+    @action(detail=False)
+    def shop(self, request):
+        """store page for products"""
+        products = self.get_queryset().filter(active=True)
+        page = self.paginate_queryset(products)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(products, many=True)
+        return Response(serializer.data)
 
-
-class ProductVariantViewSet(viewsets.ModelViewSet):
-    queryset = ProductVariant.objects.all()
-    serializer_class = ProductVariantSerializer
-    permission_classes = [IsAdminOrReadOnly]
-
-    def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        return Response({'message': 'Product variant created successfully!', 'data': response.data}, status=status.HTTP_201_CREATED)
-
-    def update(self, request, *args, **kwargs):
-        response = super().update(request, *args, **kwargs)
-        return Response({'message': 'Product variant updated successfully!', 'data': response.data}, status=status.HTTP_200_OK)
-
-    def destroy(self, request, *args, **kwargs):
-        super().destroy(request, *args, **kwargs)
-        return Response({'message': 'Product variant deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
-
-
-class FutureViewSet(viewsets.ModelViewSet):
-    queryset = Future.objects.all()
-    serializer_class = FutureSerializer
-    permission_classes = [IsAdminOrReadOnly]
-
-    def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        return Response({'message': 'Feature created successfully!', 'data': response.data}, status=status.HTTP_201_CREATED)
-
-    def update(self, request, *args, **kwargs):
-        response = super().update(request, *args, **kwargs)
-        return Response({'message': 'Feature updated successfully!', 'data': response.data}, status=status.HTTP_200_OK)
-
-    def destroy(self, request, *args, **kwargs):
-        super().destroy(request, *args, **kwargs)
-        return Response({'message': 'Feature deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
+    @action(detail=True)
+    def single(self, request, slug=None):
+        """single page for product"""
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
