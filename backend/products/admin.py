@@ -2,101 +2,148 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
+from django.db.models import Sum, Count
 
-from .models import Product, ProductVariant, Future, ProductImages
+from .models import Category, Product, ProductGallery, IpAddress, MostViewed
 
 # Register your models here.
 
 
-@admin.register(ProductVariant)
-class ProductVariantAdmin(admin.ModelAdmin):
-    """Admin panel for managing Product Variants"""
-    list_display = ('get_product_name', 'get_product_image',
-                    'price', 'discount_price', 'stock', 'sold')
-    search_fields = ('product__name', 'price')
-    list_filter = ('product',)
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'slug', 'parent', 'statuses',)
+    list_filter = ('statuses', 'parent')
+    search_fields = ('name', 'slug')
+    prepopulated_fields = {'slug': ('name',)}
+    actions = ['make_active', 'make_inactive']
 
-    fieldsets = (
-        (None, {
-            'fields': ('product', 'price', 'discount_price', 'stock', 'sold','future')
-        }),
-    )
+    def get_prepopulated_fields(self, request, obj=None):
+        return self.prepopulated_fields
 
-    @admin.display(description=_('Product Name'))
-    def get_product_name(self, obj):
-        return obj.product.name 
+    @admin.action(description=_('فعال کردن'))
+    def make_active(self, request, queryset):
+        updated = queryset.update(status=True)
+        self.message_user(request, _(
+            f'{updated} categor{"y was" if updated ==
+                                1 else "ies were"} successfully marked as active.'
+        ))
 
-    @admin.display(description=_('Product Image'))
-    def get_product_image(self, obj):
-        if obj.product.poster:
-            return format_html(
-                '<img src="{}" style="width:55px;height:55px;"/>', obj.product.poster.url
-            )
-        return "-"
-
-
-@admin.register(Future)
-class FutureAdmin(admin.ModelAdmin):
-
-    """Admin panel for managing Future (features)"""
-    list_display = ('key', 'value')
-    search_fields = ('key', 'value')
-
-    fieldsets = (
-        (None, {
-            'fields': ('key', 'value')
-        }),
-    )
-
-
-@admin.register(ProductImages)
-class ProductImagesAdmin(admin.ModelAdmin):
-    """Admin panel for managing Product Images"""
-    list_display = ('id', 'image_thumbnail')
-    search_fields = ('image_thumbnail',)
-
-    @admin.display(description=_('Thumbnail Image'))
-    def image_thumbnail(self, obj):
-        if obj.image:
-            return format_html(
-                '<img src="{}" style="width:55px;height:55px;"/>', obj.image.url
-            )
-        return "-"
+    @admin.action(description=_('غیر فعال کردن'))
+    def make_inactive(self, request, queryset):
+        updated = queryset.update(status=False)
+        self.message_user(request, _(
+            f'{updated} categor{"y was" if updated ==
+                                1 else "ies were"} successfully marked as inactive.'
+        ))
 
 
 class ProductImagesInline(admin.TabularInline):
-    model = ProductImages
-    extra = 1
+    model = ProductGallery
+    extra = 0
 
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    """Admin panel for managing Products"""
-    list_display = ('name', 'image_thumbnail', 'category',
-                    'brand', 'view_count', 'like_count', 'created_at')
-    search_fields = ('name', 'category__name', 'brand__name')
-    prepopulated_fields = {'slug': ('name',)}
-    readonly_fields = ('created_at',)
+    list_display = ('title', 'image_thumbnail', 'category',
+                    'price', 'stock', 'sold', 'active')
+    list_filter = ('active', 'category', 'created', 'updated')
+    search_fields = ('title', 'description', 'category__name')
+    prepopulated_fields = {'slug': ('title',)}
+    readonly_fields = ('created', 'updated', 'sold')
+    actions = ['make_active', 'make_inactive']
 
     inlines = [ProductImagesInline]
 
     fieldsets = (
         (None, {
-            'fields': ('name', 'category', 'brand', 'slug', 'description')
+            'fields': ('user', 'title', 'slug', 'category', 'description')
         }),
-        ('Media', {
+        (_('Product Details'), {
+            'fields': ('color', 'size', 'price', 'stock', 'sold')
+        }),
+        (_('Media'), {
             'classes': ('collapse',),
-            'fields': ('poster',),
+            'fields': ('poster', )
         }),
-        ('Statistics', {
-            'fields': ('view_count', 'like_count', 'created_at'),
+        (_('Status and Statistics'), {
+            'fields': ('active', 'created', 'updated')
         }),
     )
 
-    @admin.display(description=_('Thumbnail Image'))
+    @admin.display(description=_('Thumbnail'))
     def image_thumbnail(self, obj):
         if obj.poster:
             return format_html(
-                '<img src="{}" style="width:55px;height:55px;"/>', obj.poster.url
+                '<img src="{}" style="width:50px;height:50px;object-fit:cover;"/>',
+                obj.poster.url
             )
         return "-"
+
+    @admin.action(description=_('فعال کردن'))
+    def make_active(self, request, queryset):
+        updated = queryset.update(active=True)
+        self.message_user(request, _(
+            f'{updated} product{"" if updated ==
+                                1 else "s"} successfully marked as active.'
+        ))
+
+    @admin.action(description=_('غیر فعال کردن'))
+    def make_inactive(self, request, queryset):
+        updated = queryset.update(active=False)
+        self.message_user(request, _(
+            f'{updated} product{"" if updated ==
+                                1 else "s"} successfully marked as inactive.'
+        ))
+
+
+@admin.register(ProductGallery)
+class ProductGalleryAdmin(admin.ModelAdmin):
+    list_display = (
+        'product__title', 'original_image_preview', 'resized_image_preview')
+    list_link = [
+        'product__title'
+    ]
+
+    @admin.display(description=_('Original Image'))
+    def original_image_preview(self, obj):
+        if obj.original_images:
+            return format_html(
+                '<img src="{}" style="width:80px;height:80px;object-fit:cover;"/>',
+                obj.original_images.url
+            )
+        return "-"
+
+    @admin.display(description=_('Resized Image'))
+    def resized_image_preview(self, obj):
+        if obj.resizes_images:
+            return format_html(
+                '<img src="{}" style="width:80px;height:80px;object-fit:cover;"/>',
+                obj.resizes_images.url
+            )
+        return "-"
+
+
+@admin.register(IpAddress)
+class IpAddressAdmin(admin.ModelAdmin):
+    list_display = ('ip_address', 'views_count')
+    search_fields = ('ip_address',)
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.annotate(
+            _views_count=Count('mostviewed', distinct=True),
+        )
+        return queryset
+
+    def views_count(self, obj):
+        return obj._views_count
+    views_count.admin_order_field = '_views_count'
+    views_count.short_description = _('Views Count')
+
+
+@admin.register(MostViewed)
+class MostViewedAdmin(admin.ModelAdmin):
+    list_display = ('product', 'user', 'ip', 'Created')
+    list_filter = ('Created', 'product', 'user')
+    date_hierarchy = 'Created'
+    search_fields = ('product__title', 'user__username', 'ip__ip_address')

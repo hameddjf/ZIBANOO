@@ -37,13 +37,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
 
-    'main',
-    'tags',
     'accounts',
     'products',
 
     'rest_framework',
     'rest_framework_simplejwt',
+    'drf_spectacular',
     'mptt',
 
 ]
@@ -56,6 +55,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'products.middleware.SimpleMiddleware',
 ]
 
 ROOT_URLCONF = 'zibanoo.urls'
@@ -88,9 +89,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
-
-
 
 
 # Password validation
@@ -127,9 +125,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-STATICFILES_DIRS = [
-    BASE_DIR / "static"
-]
+# STATICFILES_DIRS = [
+#     BASE_DIR / "static"
+# ]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -167,6 +165,7 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,  # ایجاد refresh token جدید بعد از هر درخواست
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),  # نوع header احراز هویت در API
+
 }
 
 # تنظیمات REST Framework برای استفاده از JWT به عنوان روش احراز هویت
@@ -174,4 +173,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',  # JWT احراز هویت
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+SPECTACULAR_SETTINGS = {
+    'COMPONENT_SPLIT_REQUEST': True,
 }

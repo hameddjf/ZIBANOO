@@ -1,88 +1,121 @@
 from django.db import models
-from django.db.models import F
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.utils.text import slugify
 
-
-from tags.models import Base
-# Create your models here.
-
-
-class Future(models.Model):
-    """Model to define specific features of a product."""
-    FUTURE_CHOICES = [
-        ('color', 'color'),
-        ('size', 'size'),
-    ]
-    key = models.CharField(choices=FUTURE_CHOICES, max_length=50)
-    value = models.CharField(max_length=50)
-
-    class Meta:
-        verbose_name = _("ویژگی")
-        verbose_name_plural = _("ویژگی ها")
+from imagekit.models import ProcessedImageField
+from imagekit.processors import ResizeToFill
+from mptt.models import MPTTModel, TreeForeignKey
 
 
-class Product(Base):
-    """Main model for products containing general information."""
-    description = models.TextField(blank=True,)
-    view_count = models.PositiveIntegerField(default=0,)
-    like_count = models.PositiveIntegerField(default=0,)
+class IpAddress(models.Model):
+    ip_address = models.GenericIPAddressField(verbose_name='آدرس آیپی')
 
-    category = models.ForeignKey("tags.Category", verbose_name=_(
-        "Category"), on_delete=models.CASCADE)
-    brand = models.ForeignKey("tags.Brand", verbose_name=_(
-        "brand"), on_delete=models.CASCADE)
+
+class CategoryManager(models.Manager):
+    def active(self):
+        return self.filter(statuses=True)
+
+
+class Category(MPTTModel):
+    """Category model"""
+    parent = TreeForeignKey('self', on_delete=models.CASCADE,
+                            null=True, blank=True, related_name='children')
+    name = models.CharField(_("Name"), max_length=50)
+    slug = models.SlugField(_("Slug"), unique=True)
+
+    statuses = models.BooleanField(
+        default=True, verbose_name="آیا نمایش داده شود؟")
 
     class Meta:
-        verbose_name = _("محصول")
-        verbose_name_plural = _("محصولات")
-        ordering = ['-created_at']
+        verbose_name = _("Category")
+        verbose_name_plural = _("Categories")
+        # ordering = ['parent__id']
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.title, allow_unicode=True)
-        super().save(*args, **kwargs)
+            self.slug = slugify(self.name)
+        super(Category, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
 
     def get_absolute_url(self):
-        return reverse("product_detail", kwargs={"slug": self.slug})
-
-    def increment_view_count(self):
-        self.view_count = F('view_count') + 1
-        self.save()
-
-    def like(self):
-        self.like_count = F('like_count') + 1
-        self.save()
+        return reverse("category_detail", kwargs={"slug": self.slug})
 
 
-class ProductImages(models.Model):
-    """Model to store images of products."""
+class ProductGallery(models.Model):
+    """Model to define product gallery images"""
     product = models.ForeignKey(
-        Product, verbose_name=_("productimages"), on_delete=models.CASCADE, default=None)
-    image = models.ImageField(
-        upload_to='images/', height_field=None, width_field=None, max_length=None, default=None)
+        'Product', on_delete=models.CASCADE, default=None)
+    original_images = models.ImageField(upload_to='original_images/')
+    resizes_images = ProcessedImageField(
+        upload_to='resizes_images/', processors=[ResizeToFill(300, 400)],
+        format='JPEG',
+        options={'quality': 90},
+        null=True,
+        blank=True,)
 
     class Meta:
         verbose_name = _("عکس")
         verbose_name_plural = _("عکس ها")
+        ordering = ['product']
 
 
-class ProductVariant(models.Model):
-    """Model to define different variants of a product"""
-    product = models.ForeignKey(
-        Product, related_name='variants', on_delete=models.CASCADE)
-    future = models.ManyToManyField(Future, verbose_name=_("future"))
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    discount_price = models.DecimalField(
-        max_digits=10, decimal_places=2, null=True, blank=True)
-    stock = models.IntegerField(default=0,)
-    sold = models.IntegerField(default=0,)
+COLOR_CHOICES = [
+    ('blue', 'blue'),
+    ('red', 'red'),
+    ('white', 'white'),
+    ('brown', 'brown'),
+]
+SIZE_CHOICES = [
+    ('LARGE', 'LARGE'),
+    ('MEDIUM', 'MEDIUM'),
+    ('XLARGE', 'XLARGE'),
+    ('XXLARGE', 'XXLARGE'),
+]
+
+
+class Product(models.Model):
+    """Main model for products containing general information."""
+    user = models.ForeignKey("accounts.CustomUser",
+                             verbose_name=_("user"), on_delete=models.CASCADE, blank=True, null=True)
+    title = models.CharField(max_length=50,)
+    slug = models.SlugField(unique=True)
+    color = models.CharField(choices=COLOR_CHOICES, blank=False, max_length=50)
+    size = models.CharField(choices=SIZE_CHOICES, blank=False, max_length=50)
+    price = models.IntegerField()
+    stock = models.IntegerField(default=0)
+    sold = models.IntegerField(default=0)
+
+    description = models.TextField(blank=True)
+    category = models.ForeignKey(Category, verbose_name=_(
+        "Category"), on_delete=models.CASCADE, default=None)
+    created = models.DateTimeField(auto_now_add=True,)
+    updated = models.DateTimeField(auto_now=True,)
+    active = models.BooleanField(default=False)
+    poster = models.ImageField(upload_to='poster/',)
+    view_count = models.ManyToManyField(
+        IpAddress, through='MostViewed', blank=True, related_name='hits', verbose_name='بازدیدها')
+    # promotion = models.ForeignKey("promotion.Promotion", verbose_name=_(
+    #     "promotion"), on_delete=models.CASCADE)
+    # loved =
+    # rate = models.ForeignKey("app.Model", verbose_name=_(""), on_delete=models.CASCADE)
 
     class Meta:
-        verbose_name = _("ویژگی محصول")
-        verbose_name_plural = _("ویژگی‌های محصولات")
+        verbose_name = _("Product")
+        verbose_name_plural = _("Products")
+        ordering = ['-id']
 
     def __str__(self):
-        futures = ', '.join([f.key for f in self.future.all()])
-        return f"{self.product.name} - {futures}"
+        return self.title
+
+    def get_absolute_url(self):
+        return reverse("product_detail", kwargs={"pk": self.pk})
+
+
+class MostViewed(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    user = models.ForeignKey("accounts.CustomUser", on_delete=models.CASCADE)
+    ip = models.ForeignKey(IpAddress,  on_delete=models.CASCADE)
+    Created = models.DateTimeField(auto_now_add=True)
