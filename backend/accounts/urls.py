@@ -1,6 +1,7 @@
 from django.urls import path
 
-from .views import SignUpView, ActivateAccountView, CustomLoginView, CustomLogoutView, ProfileUpdateView
+from .views import SignUpView, ActivateAccountView, CustomLoginView, CustomLogoutView, ProfileUpdateView, \
+    CustomPasswordChangeView
 
 from django.urls import path
 from rest_framework_simplejwt.views import (
@@ -13,6 +14,7 @@ urlpatterns = [
     path('api/activate/<uidb64>/<token>/', ActivateAccountView.as_view(), name='activate'),
     path('api/login/', CustomLoginView.as_view(), name='login_api'),
     path('api/logout/', CustomLogoutView.as_view(), name='logout_api'),
+    path('api/change_password', CustomPasswordChangeView.as_view(), name='change_password'),
     path('api/profile/', ProfileUpdateView.as_view(), name='profile_api'),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),  # دریافت توکن JWT
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # رفرش توکن JWT

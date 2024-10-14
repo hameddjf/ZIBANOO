@@ -1,14 +1,21 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 from .models import CustomUser
 
+class CustomUserAdmin(UserAdmin):
+    list_display = ('email', 'username', 'phone_number', 'is_staff', 'is_active')
+    list_filter = ('is_staff', 'is_active')
+    ordering = ('email',)
+    search_fields = ('email', 'username', 'phone_number')
 
-class CustomUserAdmin(admin.ModelAdmin):
-    list_display = ('username', 'email', 'phone_number', 'is_active', 'is_staff')
-    search_fields = ('username', 'email', 'phone_number')
-    list_filter = ('is_active', 'is_staff')
+    # اضافه کردن date_joined به readonly_fields برای جلوگیری از ویرایش آن
+    readonly_fields = ('date_joined', 'last_login')
 
-    class Meta:
-        model = CustomUser
-
+    fieldsets = (
+        (None, {'fields': ('email', 'password')}),
+        ('اطلاعات شخصی', {'fields': ('username', 'phone_number', 'address', 'postal_code', 'note')}),
+        ('دسترسی‌ها', {'fields': ('is_active', 'is_staff', 'is_superuser')}),
+        ('تاریخ‌های مهم', {'fields': ('last_login', 'date_joined')}),  # اضافه کردن در حالت فقط خواندنی
+    )
 
 admin.site.register(CustomUser, CustomUserAdmin)
