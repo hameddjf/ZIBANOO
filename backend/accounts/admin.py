@@ -8,7 +8,7 @@ class CustomUserAdmin(UserAdmin):
     ordering = ('email',)
     search_fields = ('email', 'username', 'phone_number')
 
-    # اضافه کردن date_joined به readonly_fields برای جلوگیری از ویرایش آن
+
     readonly_fields = ('date_joined', 'last_login')
 
     fieldsets = (
