@@ -140,13 +140,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # تنظیمات ایمیل (برای ارسال لینک فعال‌سازی)
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'amyrmhmdhmzhay950@gmail.com'
+DEFAULT_FROM_EMAIL = '****@gmail.com'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'amyrmhmdhmzhay950@gmail.com'
-EMAIL_HOST_PASSWORD = 'hzxq naho xkdn cceu'
+EMAIL_HOST_USER = '****@gmail.com'
+EMAIL_HOST_PASSWORD = '****'
 EMAIL_TIMEOUT = 30
 
 # تنظیم مدل یوزر سفارشی
