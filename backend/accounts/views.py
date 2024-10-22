@@ -33,8 +33,8 @@ class SignUpView(APIView):
             if CustomUser.objects.filter(username=username).exists():
                 return Response({'message': 'User with this username already exists.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # اگر کاربری با این ایمیل یا شماره تلفن وجود نداشت، ادامه دهید و کاربر را ثبت کنید
-            user = serializer.save(is_active=False)  # Initially, user is inactive
+
+            user = serializer.save(is_active=False)
             token = account_activation_token.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             domain = get_current_site(request).domain
@@ -92,7 +92,7 @@ class CustomLoginView(APIView):
 
             if user.check_password(password):
                 login(request, user)
-                refresh = RefreshToken.for_user(user)  # JWT token generation
+                refresh = RefreshToken.for_user(user)
                 return Response({
                     'message': 'Login successful!',
                     'refresh': str(refresh),

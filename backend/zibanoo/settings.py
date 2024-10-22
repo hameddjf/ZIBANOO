@@ -39,6 +39,7 @@ INSTALLED_APPS = [
 
     'accounts',
     'products',
+    'comments',
 
     'rest_framework',
     'rest_framework_simplejwt',
