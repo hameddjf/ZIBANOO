@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer base {
+  @font-face {
+    font-family: Vazir;
+    src: url("./public/font/Vazir.eot");
+    src: url("./public/font/Vazir.eot?#iefix") format("embedded-opentype"),
+      url("./public/font/Vazir.woff") format("woff"), url("./public/font/Vazir.ttf") format("truetype");
+    font-weight: normal;
+  }
+
+  @font-face {
+    font-family: Vazir;
+    src: url("./public/font/Vazir-Bold.eot");
+    src: url("./public/font/Vazir-Bold.eot?#iefix") format("embedded-opentype"),
+      url("./public/font/Vazir-Bold.woff") format("woff"), url("./public/font/Vazir-Bold.ttf") format("truetype");
+    font-weight: bold;
+  }
+  @font-face {
+    font-family: Vazir;
+    src: url("./public/font/Vazir-Medium.eot");
+    src: url("./public/font/Vazir-Medium.eot?#iefix") format("embedded-opentype"),
+      url("./public/font/Vazir-Medium.woff") format("woff"), url("./public/font/Vazir-Medium.ttf") format("truetype");
+    font-weight: 500;
+  }
+
+  @font-face {
+    font-family: Vazir;
+    src: url("./public/font/Vazir-Light.eot");
+    src: url("./public/font/Vazir-Light.eot?#iefix") format("embedded-opentype"),
+      url("./public/font/Vazir-Light.woff") format("woff"), url("./public/font/Vazir-Light.ttf") format("truetype");
+    font-weight: 300;
+  }
+  @font-face {
+    font-family: Vazir;
+    src: url("./public/font/Vazir-thin.eot");
+    src: url("./public/font/Vazir-thin.eot?#iefix") format("embedded-opentype"),
+      url("./public/font/Vazir-thin.woff") format("woff"), url("./public/font/Vazir-thin.ttf") format("truetype");
+    font-weight: 100;
+  }
+  body {
+    font-family: "Vazir", sans-serif;
+  }
+  .maxWidth {
+    @apply max-w-[1280px] m-auto;
+  }
+  .sliderBoxShadow {
+    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 1px;
+  }
+  .sliderBoxShadow2 {
+    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+  }
+  .productAbsolute::after {
+    content: "";
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: linear-gradient(to top, rgba(255, 241, 204, 0.7), rgba(153, 145, 122, 0));
+    border-radius: 10px;
+  }
+  .container {
+    position: relative;
+    width: 100%;
+    height: 100vh; /* adjust the height as needed */
+    background-image: linear-gradient(to right, #ffc0cb 50%, #ffffff 50%);
+    background-size: 100% 100%;
+    transform: skewX(-14deg);
+  }
+  .notif-left-sec {
+    @apply w-full md:w-1/2 h-full bg-[#f2ddcf];
+    clip-path: polygon(0 0, 100% 0%, 75% 100%, 0% 100%);
+  }
+  @media (max-width: 767px) {
+    .notif-left-sec {
+      clip-path: polygon(0 0, 100% 0%, 100% 100%, 0% 100%);
+    }
+  }
+}
