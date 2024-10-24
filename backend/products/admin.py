@@ -1,10 +1,10 @@
-
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Sum, Count
 
 from .models import Category, Product, ProductGallery, IpAddress, MostViewed
+
 
 # Register your models here.
 
@@ -24,17 +24,13 @@ class CategoryAdmin(admin.ModelAdmin):
     def make_active(self, request, queryset):
         updated = queryset.update(status=True)
         self.message_user(request, _(
-            f'{updated} categor{"y was" if updated ==
-                                1 else "ies were"} successfully marked as active.'
-        ))
+            f'{updated} categor{"y was" if updated == 1 else "ies were"} successfully marked as active.'))
 
     @admin.action(description=_('غیر فعال کردن'))
     def make_inactive(self, request, queryset):
         updated = queryset.update(status=False)
         self.message_user(request, _(
-            f'{updated} categor{"y was" if updated ==
-                                1 else "ies were"} successfully marked as inactive.'
-        ))
+            f'{updated} categor{"y was" if updated == 1 else "ies were"} successfully marked as inactive.'))
 
 
 class ProductImagesInline(admin.TabularInline):
@@ -63,7 +59,7 @@ class ProductAdmin(admin.ModelAdmin):
         }),
         (_('Media'), {
             'classes': ('collapse',),
-            'fields': ('poster', )
+            'fields': ('poster',)
         }),
         (_('Status and Statistics'), {
             'fields': ('active', 'created', 'updated')
@@ -83,17 +79,13 @@ class ProductAdmin(admin.ModelAdmin):
     def make_active(self, request, queryset):
         updated = queryset.update(active=True)
         self.message_user(request, _(
-            f'{updated} product{"" if updated ==
-                                1 else "s"} successfully marked as active.'
-        ))
+            f'{updated} product{"" if updated == 1 else "s"} successfully marked as active.'))
 
     @admin.action(description=_('غیر فعال کردن'))
     def make_inactive(self, request, queryset):
         updated = queryset.update(active=False)
         self.message_user(request, _(
-            f'{updated} product{"" if updated ==
-                                1 else "s"} successfully marked as inactive.'
-        ))
+            f'{updated} product{"" if updated == 1 else "s"} successfully marked as inactive.'))
 
 
 @admin.register(ProductGallery)
@@ -137,6 +129,7 @@ class IpAddressAdmin(admin.ModelAdmin):
 
     def views_count(self, obj):
         return obj._views_count
+
     views_count.admin_order_field = '_views_count'
     views_count.short_description = _('Views Count')
 
